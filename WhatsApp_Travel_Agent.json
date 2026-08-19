@@ -1,0 +1,667 @@
+{
+  "name": "WhatsApp Travel Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "81c8f678-d0b1-489c-aa1b-dccad17b37c2",
+      "name": "Daily 8am Check",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -576,
+        -224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Four variations of the pre-trip message, so WhatsApp doesn't see identical repeated text\nconst messages = [\n  \"Hey {name}! Your trip is just 3 days away 🌴 Here's your checklist: passport, chargers, and that vacation mindset.\\n\\nWarm regards,\\nTravel Beta\",\n  \"Hi {name}, quick heads up — you're 3 days out from departure! Double check your documents and start packing.\\n\\nWarm regards,\\nTravel Beta\",\n  \"{name}, your adventure is almost here! In 3 days you're off. Make sure your travel documents and essentials are sorted.\\n\\nWarm regards,\\nTravel Beta\",\n  \"Hello {name}! Just 3 more days till you fly out. A gentle nudge to finish packing and confirm your documents.\\n\\nWarm regards,\\nTravel Beta\"\n];\n\n// Get the current row's data\nconst row = $input.item.json;\n\n// Pick one message at random\nconst randomIndex = Math.floor(Math.random() * messages.length);\nconst chosenMessage = messages[randomIndex];\n\n// Swap in the client's actual name\nconst finalMessage = chosenMessage.replace('{name}', row.Name);\n\n// Build a clean WhatsApp chatId: keep digits only, then append @c.us\nconst chatId = String(row['WhatsApp Number']).replace(/\\D/g, '') + '@c.us';\n\n// Return the row with the new fields added\nreturn {\n  json: {\n    ...row,\n    message: finalMessage,\n    chatId: chatId\n  }\n};"
+      },
+      "id": "9eec5036-db70-45a0-b847-fde54df01a4c",
+      "name": "Code in JavaScript",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        368,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://YOUR_API_KEY_HERE.,
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ chatId: $json.chatId, message: $json.message }) }}",
+        "options": {}
+      },
+      "id": "36b39c8a-e524-4f31-ad3a-394bd1354422",
+      "name": "HTTP Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        560,
+        -272
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1rr5jkYBtYmgsXgFaOOCq9fO8p32jwwHp3m8oBPcSgNw",
+          "mode": "list",
+          "cachedResultName": "TRAVEL SPREADSHEET",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rr5jkYBtYmgsXgFaOOCq9fO8p32jwwHp3m8oBPcSgNw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rr5jkYBtYmgsXgFaOOCq9fO8p32jwwHp3m8oBPcSgNw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Pre-Trip Message Sent": "Yes",
+            "row_number": "={{ $('Code in JavaScript').item.json.row_number }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "WhatsApp Number",
+              "displayName": "WhatsApp Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Departure Date",
+              "displayName": "Departure Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Return Date",
+              "displayName": "Return Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Pre-Trip Message Sent",
+              "displayName": "Pre-Trip Message Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Post-Trip Message Sent",
+              "displayName": "Post-Trip Message Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "c5122839-75b8-4182-a685-85456ba463c1",
+      "name": "Update row in sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        736,
+        -256
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fewnaQQbJ2NUiqlk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "3639cf28-16d3-4900-a2fb-414910d7a301",
+      "name": "Loop Over Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        144,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        -256
+      ],
+      "id": "c9f2a6ce-96da-4b84-967b-b462c1626998",
+      "name": "Wait",
+      "webhookId": "af0d3ed3-7264-4a34-81f6-dae76b1e5c05"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Four variations of the welcome-back message\nconst messages = [\n  \"Welcome back, {name}! How was the trip? We'd love to hear all about it whenever you have a moment.\\n\\nWarm regards,\\nTravel Beta\",\n  \"Hey {name}, hope you landed safely! How was your trip? Let us know if there's anything we can help with.\\n\\nWarm regards,\\nTravel Beta\",\n  \"{name}, welcome home! We hope the trip was unforgettable. Would love to hear how it went!\\n\\nWarm regards,\\nTravel Beta\",\n  \"Hi {name}! Glad you're back. How was everything? Always here if you need help planning the next one.\\n\\nWarm regards,\\nTravel Beta\"\n];\n\n// Get the current row's data\nconst row = $input.item.json;\n\n// Pick one message at random\nconst randomIndex = Math.floor(Math.random() * messages.length);\nconst chosenMessage = messages[randomIndex];\n\n// Swap in the client's actual name\nconst finalMessage = chosenMessage.replace('{name}', row.Name);\n\n// Return the row with the new \"message\" field added\nreturn {\n  json: {\n    ...row,\n    message: finalMessage\n  }\n};"
+      },
+      "id": "f1d279ab-6437-465a-882e-f99bb03af72e",
+      "name": "Code in JavaScript1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        176,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1rr5jkYBtYmgsXgFaOOCq9fO8p32jwwHp3m8oBPcSgNw",
+          "mode": "list",
+          "cachedResultName": "TRAVEL SPREADSHEET",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rr5jkYBtYmgsXgFaOOCq9fO8p32jwwHp3m8oBPcSgNw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rr5jkYBtYmgsXgFaOOCq9fO8p32jwwHp3m8oBPcSgNw/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Pre-Trip Message Sent": "Yes",
+            "row_number": "={{ $('Code in JavaScript1').item.json.row_number }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "WhatsApp Number",
+              "displayName": "WhatsApp Number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Departure Date",
+              "displayName": "Departure Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Return Date",
+              "displayName": "Return Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Pre-Trip Message Sent",
+              "displayName": "Pre-Trip Message Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Post-Trip Message Sent",
+              "displayName": "Post-Trip Message Sent",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "2afeafed-4e16-4f68-9e92-6a9bc0713d61",
+      "name": "Update row in sheet1",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        576,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fewnaQQbJ2NUiqlk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "9e884fbe-e8bd-4620-8f4f-b03429770ec3",
+      "name": "Loop Over Items1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -48,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        768,
+        16
+      ],
+      "id": "9a620955-5f34-4885-bac5-0d89970a6ba4",
+      "name": "Wait1",
+      "webhookId": "af0d3ed3-7264-4a34-81f6-dae76b1e5c05"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.green-api.com/waInstance710722709253/sendMessage/96c35afbc2c04817b1af418e5aee605ec5a738a0515d4c9587",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ chatId: $json.chatId, message: $json.message }) }}",
+        "options": {}
+      },
+      "id": "6c531230-a8ed-41da-8a75-065a490427a8",
+      "name": "HTTP Request1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        400,
+        -32
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1rr5jkYBtYmgsXgFaOOCq9fO8p32jwwHp3m8oBPcSgNw",
+          "mode": "list",
+          "cachedResultName": "TRAVEL SPREADSHEET",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rr5jkYBtYmgsXgFaOOCq9fO8p32jwwHp3m8oBPcSgNw/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1rr5jkYBtYmgsXgFaOOCq9fO8p32jwwHp3m8oBPcSgNw/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "1d3164d3-6929-4b70-b61d-84c6876ab798",
+      "name": "Get Rows in Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -304,
+        -240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "fewnaQQbJ2NUiqlk",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f95a06d2-9c26-4011-b507-c1fbd8720267",
+              "leftValue": "={{ $json['Return Date'] }}",
+              "rightValue": "={{ DateTime.fromISO($json[\"Return Date\"]).plus({ days: 1 }).toFormat(\"yyyy-MM-dd\") }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "4940e327-9fd4-4e7b-9a1e-135cabdc4ef9",
+              "leftValue": "={{ $json['Post-Trip Message Sent'] }}",
+              "rightValue": "No",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "fd2e411d-00b8-461d-9ecf-1132c4c50ebf",
+      "name": "Post-trip IF node",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -288,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f95a06d2-9c26-4011-b507-c1fbd8720267",
+              "leftValue": "={{ $json['Departure Date'] }}",
+              "rightValue": "={{ $now.plus({ days: 3 }).toFormat('yyyy-MM-dd') }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "4940e327-9fd4-4e7b-9a1e-135cabdc4ef9",
+              "leftValue": "={{ $json['Pre-Trip Message Sent'] }}",
+              "rightValue": "No",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "92b1ff1a-9e92-460c-8288-e3dde54adc21",
+      "name": "Pre-trip IF node",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -96,
+        -240
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Daily 8am Check": {
+      "main": [
+        [
+          {
+            "node": "Get Rows in Sheets",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Post-trip IF node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Rows in Sheets": {
+      "main": [
+        [
+          {
+            "node": "Pre-trip IF node",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Post-trip IF node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Post-trip IF node": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pre-trip IF node": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "b5410afa-bc25-4b59-9841-f0760d4b06e0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e0230a64ca9f13c63c0b577e34e2e62f878b410cdad69479e7c00563943490fd"
+  },
+  "nodeGroups": [],
+  "id": "mRKmDL8QYGlOuZFo",
+  "tags": []
+}
